@@ -24,20 +24,22 @@ type ClientConfig struct {
 	// E.g. http://localhost:3100/api/prom/push
 	PushURL string
 	// E.g. "{job=\"somejob\"}"
-	Labels             string
+	// Labels             string
 	BatchWait          time.Duration
 	BatchEntriesNumber int
-	// Logs are sent to Promtail if the entry level is >= SendLevel
-	SendLevel LogLevel
-	// Logs are printed to stdout if the entry level is >= PrintLevel
-	PrintLevel LogLevel
+	// // Logs are sent to Promtail if the entry level is >= SendLevel
+	// SendLevel LogLevel
+	// // Logs are printed to stdout if the entry level is >= PrintLevel
+	// PrintLevel LogLevel
 }
 
 type Client interface {
-	Debugf(format string, args ...interface{})
-	Infof(format string, args ...interface{})
-	Warnf(format string, args ...interface{})
-	Errorf(format string, args ...interface{})
+	// Debugf(format string, args ...interface{})
+	// Infof(format string, args ...interface{})
+	// Warnf(format string, args ...interface{})
+	// Errorf(format string, args ...interface{})
+	// LogWithLabels write logs without Log level but with labels
+	LogWithLabels(lables map[string]string, line string)
 	Shutdown()
 }
 

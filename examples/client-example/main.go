@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 	"time"
-	"github.com/afiskon/promtail-client/promtail"
+
+	"github.com/techquest-tech/promtail-client/promtail"
 )
 
 func displayUsage() {
@@ -20,13 +21,13 @@ func displayInvalidName(arg string) {
 
 func nameIsValid(name string) bool {
 	for _, c := range name {
-        if !((c >= 'a' && c <= 'z') ||
-             (c >= 'A' && c <= 'Z') ||
-             (c >= '0' && c <= '9') ||
-             (c == '-') || (c == '_')) {
-            return false
-        }
-    }
+		if !((c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') ||
+			(c >= '0' && c <= '9') ||
+			(c == '-') || (c == '_')) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -50,38 +51,46 @@ func main() {
 		displayInvalidName("job-name")
 	}
 
-	labels := "{source=\""+source_name+"\",job=\""+job_name+"\"}"
+	// labels := "{source=\"" + source_name + "\",job=\"" + job_name + "\"}"
 	conf := promtail.ClientConfig{
-		PushURL:            "http://localhost:3100/api/prom/push",
-		Labels:             labels,
+		PushURL: "http://loki.sit.alillb.esquel.com/api/prom/push",
+		// Labels:             labels,
 		BatchWait:          5 * time.Second,
 		BatchEntriesNumber: 10000,
-		SendLevel: 			promtail.INFO,
-		PrintLevel: 		promtail.ERROR,
+		// SendLevel:          promtail.INFO,
+		// PrintLevel:         promtail.ERROR,
 	}
 
 	var (
 		loki promtail.Client
-		err error
+		err  error
 	)
 
-	if format == "proto" {
-		loki, err = promtail.NewClientProto(conf)
-	} else {
-		loki, err = promtail.NewClientJson(conf)
-	}
+	// if format == "proto" {
+	// 	loki, err = promtail.NewClientProto(conf)
+	// } else {
+	loki, err = promtail.NewClientJson(conf)
+	// }
 
 	if err != nil {
 		log.Printf("promtail.NewClient: %s\n", err)
 		os.Exit(1)
 	}
 
+	maplab := make(map[string]string)
+
+	maplab["source"] = source_name
+	maplab["job"] = job_name
+
 	for i := 1; i < 5; i++ {
 		tstamp := time.Now().String()
-		loki.Debugf("source = %s time = %s, i = %d\n", source_name, tstamp, i)
-		loki.Infof("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
-		loki.Warnf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
-		loki.Errorf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
+
+		// loki.Debugf("source = %s time = %s, i = %d\n", source_name, tstamp, i)
+		// loki.Infof("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
+		// loki.Warnf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
+		// loki.Errorf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
+
+		loki.LogWithLabels(maplab, "Hello, "+tstamp)
 		time.Sleep(1 * time.Second)
 	}
 
