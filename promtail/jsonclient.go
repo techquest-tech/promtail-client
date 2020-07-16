@@ -12,12 +12,13 @@ import (
 type jsonLogEntry struct {
 	Ts   string `json:"ts"`
 	Line string `json:"line"`
-	// level LogLevel  // not used in JSON
+	// level LogLevel // not used in JSON
 }
 
 type promtailStream struct {
 	Labels  string          `json:"labels"`
 	Entries []*jsonLogEntry `json:"entries"`
+	level   LogLevel        // not used in JSON
 }
 
 type promtailMsg struct {
@@ -72,8 +73,9 @@ func handleLabels(labels map[string]string) string {
 	return "{" + strings.Join(s, ",") + "}"
 }
 
-func (c *clientJson) LogWithLabels(lables map[string]string, line string) {
+func (c *clientJson) LogWithLabels(lables map[string]string, level LogLevel, line string) {
 	// v, _ := json.Marshal(lables)
+
 	labstr := handleLabels(lables)
 	now := time.Now().Format(time.RFC3339)
 	// line := strings.Join(args, " ")
@@ -90,6 +92,7 @@ func (c *clientJson) LogWithLabels(lables map[string]string, line string) {
 	s := promtailStream{
 		Labels:  labstr,
 		Entries: entries,
+		level:   level,
 	}
 
 	c.streams <- &s
@@ -128,20 +131,22 @@ func (c *clientJson) run() {
 		case <-c.quit:
 			return
 		case entry := <-c.streams:
-			// if entry.level >= c.config.PrintLevel {
-			// 	log.Print(entry.Line)
-			// }
-
-			// if entry.level >= c.config.SendLevel {
-			batch = append(batch, entry)
-			batchSize++
-			if batchSize >= c.config.BatchEntriesNumber {
-				c.send(batch)
-				batch = []*promtailStream{}
-				batchSize = 0
-				maxWait.Reset(c.config.BatchWait)
+			if entry.level >= c.config.PrintLevel {
+				for _, index := range entry.Entries {
+					log.Println(index.Line)
+				}
 			}
-			// }
+
+			if entry.level >= c.config.SendLevel {
+				batch = append(batch, entry)
+				batchSize++
+				if batchSize >= c.config.BatchEntriesNumber {
+					c.send(batch)
+					batch = []*promtailStream{}
+					batchSize = 0
+					maxWait.Reset(c.config.BatchWait)
+				}
+			}
 		case <-maxWait.C:
 			if batchSize > 0 {
 				c.send(batch)

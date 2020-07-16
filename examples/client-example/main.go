@@ -58,7 +58,7 @@ func main() {
 		BatchWait:          5 * time.Second,
 		BatchEntriesNumber: 10000,
 		// SendLevel:          promtail.INFO,
-		// PrintLevel:         promtail.ERROR,
+		PrintLevel: promtail.ERROR,
 	}
 
 	var (
@@ -90,7 +90,7 @@ func main() {
 		// loki.Warnf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
 		// loki.Errorf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
 
-		loki.LogWithLabels(maplab, "Hello, "+tstamp)
+		loki.LogWithLabels(maplab, promtail.INFO, "Hello, "+tstamp)
 		time.Sleep(1 * time.Second)
 	}
 

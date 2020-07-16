@@ -27,10 +27,10 @@ type ClientConfig struct {
 	// Labels             string
 	BatchWait          time.Duration
 	BatchEntriesNumber int
-	// // Logs are sent to Promtail if the entry level is >= SendLevel
-	// SendLevel LogLevel
-	// // Logs are printed to stdout if the entry level is >= PrintLevel
-	// PrintLevel LogLevel
+	// Logs are sent to Promtail if the entry level is >= SendLevel
+	SendLevel LogLevel
+	// Logs are printed to stdout if the entry level is >= PrintLevel
+	PrintLevel LogLevel
 }
 
 type Client interface {
@@ -39,7 +39,7 @@ type Client interface {
 	// Warnf(format string, args ...interface{})
 	// Errorf(format string, args ...interface{})
 	// LogWithLabels write logs without Log level but with labels
-	LogWithLabels(lables map[string]string, line string)
+	LogWithLabels(lables map[string]string, level LogLevel, line string)
 	Shutdown()
 }
 
