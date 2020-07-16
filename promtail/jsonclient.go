@@ -173,8 +173,6 @@ func (c *clientJson) send(streams []*promtailStream) {
 		return
 	}
 
-	log.Printf("posting message: %s", string(jsonMsg))
-
 	resp, body, err := c.client.sendJsonReq("POST", c.config.PushURL, "application/json", jsonMsg)
 	if err != nil {
 		log.Printf("promtail.ClientJson: unable to send an HTTP request: %s\n", err)
@@ -185,4 +183,6 @@ func (c *clientJson) send(streams []*promtailStream) {
 		log.Printf("promtail.ClientJson: Unexpected HTTP status code: %d, message: %s\n", resp.StatusCode, body)
 		return
 	}
+
+	log.Printf("Save to Loki done. batch size: %d", len(msg.Streams))
 }

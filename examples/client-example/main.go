@@ -58,7 +58,7 @@ func main() {
 		BatchWait:          5 * time.Second,
 		BatchEntriesNumber: 10000,
 		// SendLevel:          promtail.INFO,
-		PrintLevel: promtail.ERROR,
+		// PrintLevel: promtail.ERROR,
 	}
 
 	var (
