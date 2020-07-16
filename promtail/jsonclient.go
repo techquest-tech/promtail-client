@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -65,10 +66,16 @@ func NewClientJson(conf ClientConfig) (Client, error) {
 // 	c.log(format, ERROR, "Error: ", args...)
 // }
 
+var reg = regexp.MustCompile("[^a-zA-Z0-9_]")
+
+func deleteInvalidChar(key string) string {
+	return reg.ReplaceAllString(key, "_")
+}
+
 func handleLabels(labels map[string]string) string {
 	var s []string
 	for k, v := range labels {
-		s = append(s, fmt.Sprintf("%s=\"%s\"", k, v))
+		s = append(s, fmt.Sprintf("%s=\"%s\"", deleteInvalidChar(k), v))
 	}
 	return "{" + strings.Join(s, ",") + "}"
 }

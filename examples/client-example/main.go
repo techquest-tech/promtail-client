@@ -32,6 +32,7 @@ func nameIsValid(name string) bool {
 }
 
 func main() {
+
 	if len(os.Args) < 4 {
 		displayUsage()
 	}
@@ -39,6 +40,7 @@ func main() {
 	format := os.Args[1]
 	source_name := os.Args[2]
 	job_name := os.Args[3]
+
 	if format != "proto" && format != "json" {
 		displayUsage()
 	}
@@ -81,6 +83,9 @@ func main() {
 
 	maplab["source"] = source_name
 	maplab["job"] = job_name
+	maplab["invalid-key"] = "loki-testing"
+	maplab["invalid-key2$$$$"] = "loki-testing"
+	maplab["invalid_key3$$$$"] = "loki-testing"
 
 	for i := 1; i < 5; i++ {
 		tstamp := time.Now().String()
