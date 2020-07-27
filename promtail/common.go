@@ -5,21 +5,30 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 )
 
-const LOG_ENTRIES_CHAN_SIZE = 5000
+// LogChanSize default chan size
+const LogChanSize = 5000
 
+// LogLevel level for log
 type LogLevel int
 
 const (
+	//DEBUG debug
 	DEBUG LogLevel = iota
-	INFO  LogLevel = iota
-	WARN  LogLevel = iota
+	//INFO default level
+	INFO LogLevel = iota
+	//WARN warning
+	WARN LogLevel = iota
+	//ERROR error only
 	ERROR LogLevel = iota
-	// Maximum level, disables sending or printing
+	//DISABLE Maximum level, disables sending or printing
 	DISABLE LogLevel = iota
 )
 
+//ClientConfig new config: MaxRetry
 type ClientConfig struct {
 	// E.g. http://localhost:3100/api/prom/push
 	PushURL string
@@ -31,8 +40,11 @@ type ClientConfig struct {
 	SendLevel LogLevel
 	// Logs are printed to stdout if the entry level is >= PrintLevel
 	PrintLevel LogLevel
+	// MaxRetry enabled retry, default disabled, 0
+	MaxRetry int
 }
 
+//Client client interface
 type Client interface {
 	// Debugf(format string, args ...interface{})
 	// Infof(format string, args ...interface{})
@@ -49,7 +61,15 @@ type httpClient struct {
 }
 
 // A bit more convenient method for sending requests to the HTTP server
-func (client *httpClient) sendJsonReq(method, url string, ctype string, reqBody []byte) (resp *http.Response, resBody []byte, err error) {
+func (client *httpClient) sendJSONReq(method, url string, ctype string, reqBody []byte) (resp *http.Response, resBody []byte, err error) {
+
+	retryclient := retryablehttp.NewClient()
+	retryclient.RetryMax = 10
+	// maxwait, _ := time.ParseDuration("30m")
+	// retryclient.RetryWaitMax = maxwait
+
+	httpclient := retryclient.StandardClient()
+
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, nil, err
@@ -57,7 +77,7 @@ func (client *httpClient) sendJsonReq(method, url string, ctype string, reqBody 
 
 	req.Header.Set("Content-Type", ctype)
 
-	resp, err = client.parent.Do(req)
+	resp, err = httpclient.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}

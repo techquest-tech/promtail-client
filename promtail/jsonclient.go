@@ -39,7 +39,7 @@ func NewClientJson(conf ClientConfig) (Client, error) {
 	client := clientJson{
 		config:  &conf,
 		quit:    make(chan struct{}),
-		streams: make(chan *promtailStream, LOG_ENTRIES_CHAN_SIZE),
+		streams: make(chan *promtailStream, LogChanSize),
 		// entries: make(chan *jsonLogEntry, LOG_ENTRIES_CHAN_SIZE),
 		client: httpClient{},
 	}
@@ -180,7 +180,7 @@ func (c *clientJson) send(streams []*promtailStream) {
 		return
 	}
 
-	resp, body, err := c.client.sendJsonReq("POST", c.config.PushURL, "application/json", jsonMsg)
+	resp, body, err := c.client.sendJSONReq("POST", c.config.PushURL, "application/json", jsonMsg)
 	if err != nil {
 		log.Printf("promtail.ClientJson: unable to send an HTTP request: %s\n", err)
 		return
