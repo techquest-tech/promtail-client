@@ -26,7 +26,8 @@ type promtailMsg struct {
 	Streams []*promtailStream `json:"streams"`
 }
 
-type clientJson struct {
+// ClientJSON client with JSON format
+type ClientJSON struct {
 	config  *ClientConfig
 	quit    chan struct{}
 	streams chan *promtailStream
@@ -35,13 +36,27 @@ type clientJson struct {
 	client    httpClient
 }
 
-func NewClientJson(conf ClientConfig) (Client, error) {
-	client := clientJson{
+// NewClientJSON client with JSON
+func NewClientJSON(conf ClientConfig) (Client, error) {
+
+	httpclient := httpClient{
+		RetryMax:     conf.MaxRetry,
+		RetryMinWait: conf.RetryMinWait,
+		RetryMaxWait: conf.RetryMaxWait,
+	}
+
+	if httpclient.RetryMax <= 0 {
+		httpclient.RetryMax = 10
+		httpclient.RetryMinWait = 5 * time.Second
+		httpclient.RetryMaxWait = 60 * time.Second
+	}
+
+	client := ClientJSON{
 		config:  &conf,
 		quit:    make(chan struct{}),
 		streams: make(chan *promtailStream, LogChanSize),
 		// entries: make(chan *jsonLogEntry, LOG_ENTRIES_CHAN_SIZE),
-		client: httpClient{},
+		client: httpclient,
 	}
 
 	client.waitGroup.Add(1)
@@ -80,7 +95,7 @@ func handleLabels(labels map[string]string) string {
 	return "{" + strings.Join(s, ",") + "}"
 }
 
-func (c *clientJson) LogWithLabels(lables map[string]string, level LogLevel, line string) {
+func (c *ClientJSON) LogWithLabels(lables map[string]string, level LogLevel, line string) {
 	// v, _ := json.Marshal(lables)
 
 	labstr := handleLabels(lables)
@@ -115,12 +130,12 @@ func (c *clientJson) LogWithLabels(lables map[string]string, level LogLevel, lin
 // 	}
 // }
 
-func (c *clientJson) Shutdown() {
+func (c *ClientJSON) Shutdown() {
 	close(c.quit)
 	c.waitGroup.Wait()
 }
 
-func (c *clientJson) run() {
+func (c *ClientJSON) run() {
 	var batch []*promtailStream
 	batchSize := 0
 	maxWait := time.NewTimer(c.config.BatchWait)
@@ -165,7 +180,7 @@ func (c *clientJson) run() {
 	}
 }
 
-func (c *clientJson) send(streams []*promtailStream) {
+func (c *ClientJSON) send(streams []*promtailStream) {
 	// var streams []promtailStream
 	// streams = entries
 	// append(streams, promtailStream{

@@ -42,6 +42,10 @@ type ClientConfig struct {
 	PrintLevel LogLevel
 	// MaxRetry enabled retry, default disabled, 0
 	MaxRetry int
+	// RetryMinWait, default 1s
+	RetryMinWait time.Duration
+	// RetryMaxWait default 30s
+	RetryMaxWait time.Duration
 }
 
 //Client client interface
@@ -57,14 +61,19 @@ type Client interface {
 
 // http.Client wrapper for adding new methods, particularly sendJsonReq
 type httpClient struct {
-	parent http.Client
+	parent       http.Client
+	RetryMax     int
+	RetryMinWait time.Duration
+	RetryMaxWait time.Duration
 }
 
 // A bit more convenient method for sending requests to the HTTP server
 func (client *httpClient) sendJSONReq(method, url string, ctype string, reqBody []byte) (resp *http.Response, resBody []byte, err error) {
 
 	retryclient := retryablehttp.NewClient()
-	retryclient.RetryMax = 10
+	retryclient.RetryMax = client.RetryMax
+	retryclient.RetryWaitMin = client.RetryMinWait
+	retryclient.RetryWaitMax = client.RetryMaxWait
 	// maxwait, _ := time.ParseDuration("30m")
 	// retryclient.RetryWaitMax = maxwait
 

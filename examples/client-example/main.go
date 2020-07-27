@@ -57,10 +57,13 @@ func main() {
 	conf := promtail.ClientConfig{
 		PushURL: "http://loki.sit.alillb.esquel.com/api/prom/push",
 		// Labels:             labels,
-		BatchWait:          30 * time.Second,
+		BatchWait:          10 * time.Second,
 		BatchEntriesNumber: 10000,
 		// SendLevel:          promtail.INFO,
 		// PrintLevel: promtail.ERROR,
+		// MaxRetry:     10,
+		// RetryMinWait: time.Second,
+		// RetryMaxWait: time.Minute,
 	}
 
 	var (
@@ -71,7 +74,7 @@ func main() {
 	// if format == "proto" {
 	// 	loki, err = promtail.NewClientProto(conf)
 	// } else {
-	loki, err = promtail.NewClientJson(conf)
+	loki, err = promtail.NewClientJSON(conf)
 	// }
 
 	if err != nil {
@@ -96,7 +99,7 @@ func main() {
 		// loki.Errorf("source = %s, time = %s, i = %d\n", source_name, tstamp, i)
 
 		loki.LogWithLabels(maplab, promtail.INFO, fmt.Sprintf("%d. hello, %s", i, tstamp))
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 	// time.Sleep(10 * time.Second)
 	loki.Shutdown()
